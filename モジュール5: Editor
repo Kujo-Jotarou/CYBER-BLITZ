@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>CYBER BLITZ : HACKER BEATS (Modular)</title>
+    <!-- CDN Links -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Module 0: Foundation CSS -->
+    <style>
+        :root {
+            --cyan: #00ffff;
+            --magenta: #ff00ff;
+            --yellow: #ffff00;
+            --gray: #808080;
+            --dark-bg: #010008;
+            --border-color: rgba(0, 255, 255, 0.3);
+        }
+        
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background-color: var(--dark-bg);
+            color: #d0d0ff;
+            overflow: hidden;
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2300ffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M5 12h14'/><path d='M12 5v14'/></svg>") 12 12, auto;
+            touch-action: manipulation;
+        }
+
+        .font-sans { font-family: 'Noto Sans JP', sans-serif; }
+        .hidden-screen { display: none !important; }
+
+        .cyber-button {
+            background: transparent;
+            border: 2px solid;
+            padding: 0.75rem 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.1em;
+            font-weight: 700;
+        }
+        .btn-cyan { border-color: var(--cyan); color: var(--cyan); box-shadow: inset 0 0 10px var(--cyan), 0 0 10px var(--cyan); }
+        .btn-magenta { border-color: var(--magenta); color: var(--magenta); box-shadow: inset 0 0 10px var(--magenta), 0 0 10px var(--magenta); }
+        .btn-yellow { border-color: var(--yellow); color: var(--yellow); box-shadow: inset 0 0 10px var(--yellow), 0 0 10px var(--yellow); }
+        .cyber-button:hover:not(:disabled) { color: var(--dark-bg); transform: scale(1.05); }
+        .btn-cyan:hover:not(:disabled) { background-color: var(--cyan); box-shadow: 0 0 20px var(--cyan), 0 0 30px var(--cyan); }
+        .btn-magenta:hover:not(:disabled) { background-color: var(--magenta); box-shadow: 0 0 20px var(--magenta), 0 0 30px var(--magenta); }
+        .btn-yellow:hover:not(:disabled) { background-color: var(--yellow); box-shadow: 0 0 20px var(--yellow), 0 0 30px var(--yellow); }
+        .cyber-button:disabled { filter: grayscale(1) brightness(0.5); cursor: not-allowed; text-shadow: none; border-color: var(--gray); color: var(--gray); box-shadow: none; }
+
+        .background-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -10; }
+        .background-grid { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(0, 255, 255, 0.05) 50px), repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(255, 0, 255, 0.05) 50px); background-size: 50px 50px; animation: bg-scroll 20s linear infinite; }
+        @keyframes bg-scroll { 0% { background-position: 0 0; } 100% { background-position: 0 -1000px; } }
+        .background-glow { position: absolute; width: 150vw; height: 150vh; top: 50%; left: 50%; transform: translate(-50%, -50%); background: radial-gradient(ellipse at center, rgba(30, 0, 70, 0.5) 0%, rgba(1, 0, 8, 0) 60%); animation: glow-pulse 8s ease-in-out infinite alternate; }
+        @keyframes glow-pulse { from { transform: translate(-50%, -50%) scale(0.8); opacity: 0.7; } to { transform: translate(-50%, -50%) scale(1.2); opacity: 1; } }
+
+        .glitch { position: relative; font-size: 6rem; line-height: 1; font-weight: 900; text-shadow: 0 0 5px var(--cyan), 0 0 10px var(--cyan), 0 0 20px var(--cyan), 0 0 40px var(--magenta), 0 0 80px var(--magenta); animation: glitch-anim 5s infinite alternate-reverse; }
+        .glitch:before, .glitch:after { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark-bg); overflow: hidden; clip: rect(0, 900px, 0, 0); }
+        .glitch:before { left: -2px; text-shadow: 2px 0 var(--cyan), -1px 0 var(--magenta); animation: glitch-anim-2 3s infinite linear alternate-reverse; }
+        .glitch:after { left: 2px; text-shadow: -2px 0 var(--magenta), 1px 0 var(--cyan); animation: glitch-anim-3 4s infinite linear alternate-reverse; }
+        @keyframes glitch-anim { from { text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 40px #ff00ff, 0 0 80px #ff00ff; } to { text-shadow: 0 0 5px #00ffff, 0 0 15px #00ffff, 0 0 25px #ff00ff, 0 0 50px #ff00ff, 0 0 100px #ff00ff; } }
+        @keyframes glitch-anim-2 { 0%, 100% { clip: rect(44px, 9999px, 99px, 0); } 15% { clip: rect(12px, 9999px, 60px, 0); } 30% { clip: rect(50px, 9999px, 56px, 0); } 45% { clip: rect(27px, 9999px, 106px, 0); } 60% { clip: rect(90px, 9999px, 90px, 0); } 75% { clip: rect(30px, 9999px, 75px, 0); } 90% { clip: rect(78px, 9999px, 52px, 0); } }
+        @keyframes glitch-anim-3 { 0%, 100% { clip: rect(65px, 9999px, 119px, 0); } 10% { clip: rect(79px, 9999px, 92px, 0); } 20% { clip: rect(68px, 9999px, 110px, 0); } 30% { clip: rect(40px, 9999px, 130px, 0); } 40% { clip: rect(20px, 9999px, 85px, 0); } 50% { clip: rect(54px, 9999px, 130px, 0); } 60% { clip: rect(10px, 9999px, 100px, 0); } 70% { clip: rect(80px, 9999px, 70px, 0); } 80% { clip: rect(45px, 9999px, 80px, 0); } 90% { clip: rect(95px, 9999px, 60px, 0); } }
+        .subtitle { font-size: 1.25rem; letter-spacing: 0.5em; color: #d0d0ff; text-shadow: 0 0 3px var(--magenta), 0 0 5px var(--magenta); text-indent: 0.5em; }
+        .file-drop-area { border: 3px dashed var(--border-color); background: rgba(0,255,255,0.05); transition: all 0.3s; }
+        .file-drop-area.dragover { background: rgba(0,255,255,0.15); box-shadow: 0 0 25px var(--cyan); transform: scale(1.02); }
+        .result-overlay, .error-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+            z-index: 9999; display: flex; justify-content: center;
+            align-items: center; text-align: center; padding: 2rem;
+        }
+        @media (max-width: 768px) { .glitch { font-size: 3rem; } .subtitle { font-size: 1rem; } }
+    </style>
+</head>
+<body>
+    <!-- Background Elements -->
+    <div class="background-container"><div class="background-grid"></div><div class="background-glow"></div></div>
+    
+    <!-- Main Application Container -->
+    <div id="app-container">
+
+        <!-- Screen: Title -->
+        <div id="screen-title" class="w-full h-screen flex flex-col justify-center items-center text-center p-4">
+            <header>
+                <h1 class="glitch" data-text="CYBER BLITZ">CYBER BLITZ</h1>
+                <p class="subtitle tracking-widest">HACKER BEATS</p>
+            </header>
+            <main class="mt-12 md:mt-16 w-full max-w-sm flex flex-col gap-4">
+                <button data-screen="playLoader" class="screen-changer cyber-button btn-cyan w-full">PLAY BEATMAP</button>
+                <button data-screen="editorLoader" class="screen-changer cyber-button btn-magenta w-full">CREATE / EDIT</button>
+            </main>
+        </div>
+        
+        <!-- Screen: Player Loader -->
+        <div id="screen-play-loader" class="hidden-screen w-full h-screen flex flex-col justify-center items-center text-center p-4">
+            <h1 class="text-4xl font-bold mb-8">PLAY MODE</h1>
+            <div id="play-loader-drop-area" class="file-drop-area w-full max-w-2xl min-h-[18rem] rounded-lg flex flex-col justify-center items-center p-8">
+                <p class="text-2xl font-bold mb-2">DRAG & DROP</p>
+                <p class="font-sans">PLAY WITH <span class="text-cyan-300">AUDIO</span> + <span class="text-magenta-400">BEATMAP (.json)</span></p>
+                <input type="file" id="play-loader-file-input" class="hidden" multiple accept="audio/*,.json"><label for="play-loader-file-input" class="cyber-button btn-cyan mt-4 cursor-pointer">OR SELECT FILES</label>
+                <div class="mt-6 font-sans text-lg flex gap-8"><p>AUDIO: <span id="play-audio-status" class="text-gray-500">REQUIRED</span></p><p>BEATMAP: <span id="play-beatmap-status" class="text-gray-500">REQUIRED</span></p></div>
+            </div><div class="mt-8"><button data-screen="title" class="screen-changer cyber-button btn-magenta w-48">BACK</button></div>
+        </div>
+
+        <!-- Screen: Player -->
+        <div id="screen-play" class="hidden-screen w-full h-screen flex justify-center items-center">
+            <!-- Content is generated by CyberBlitzPlayer class -->
+        </div>
+        
+        <!-- Screen: Editor Loader -->
+        <div id="screen-editor-loader" class="hidden-screen w-full h-screen flex flex-col justify-center items-center text-center p-4">
+            <h1 class="text-4xl font-bold mb-8">EDITOR MODE</h1>
+            <div id="editor-loader-drop-area" class="file-drop-area w-full max-w-2xl min-h-[18rem] rounded-lg flex flex-col justify-center items-center p-8">
+                <p class="text-2xl font-bold mb-2">DRAG & DROP</p>
+                <p class="font-sans"><span class="text-cyan-300">AUDIO</span> FILE TO CREATE<br><span class="text-gray-400">or</span><br><span class="text-cyan-300">AUDIO</span> + <span class="text-magenta-400">BEATMAP (.json)</span> TO EDIT</p>
+                <input type="file" id="editor-loader-file-input" class="hidden" multiple accept="audio/*,.json"><label for="editor-loader-file-input" class="cyber-button btn-cyan mt-4 cursor-pointer">OR SELECT FILES</label>
+                <div class="mt-6 font-sans text-lg flex gap-8"><p>AUDIO: <span id="editor-audio-status" class="text-gray-500">NOT LOADED</span></p><p>BEATMAP: <span id="editor-beatmap-status" class="text-gray-500">NOT LOADED</span></p></div>
+            </div><div class="mt-8"><button data-screen="title" class="screen-changer cyber-button btn-magenta w-48">BACK</button></div>
+        </div>
+        
+        <!-- Screen: Editor -->
+        <div id="screen-editor" class="hidden-screen w-full h-screen">
+            <!-- Content is generated by CyberBlitzEditor class -->
+        </div>
+
+        <!-- Screen: Result (Overlay) -->
+        <div id="screen-result" class="hidden-screen result-overlay">
+             <!-- Content is generated by CyberBlitzPlayer class -->
+        </div>
+
+        <!-- Screen: Global Error (Overlay) -->
+        <div id="global-error-overlay" class="hidden-screen error-overlay">
+            <!-- Content will be added by App.showError -->
+        </div>
+    </div>
+
+    <!-- Main Application Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Global Application Object
+            const App = {
+                elements: {},
+                currentInstance: null,
+            };
+            
+            // Module 5: Editor
+            class CyberBlitzEditor {
+                constructor(container, audioUrl, beatmapContent) {
+                    this.container = container;
+                    this.audioUrl = audioUrl;
+                    this.beatmapContent = beatmapContent;
+                    this.animationFrameId = null;
+                }
+
+                async initialize() {
+                    try {
+                        this.initDom();
+                        this.initState();
+                        this.attachEventListeners();
+                        this.audioPlayer = await App.audioManager.loadPlayer(this.audioUrl);
+                        if (!this.audioPlayer) throw new Error("Audio player could not be loaded.");
+
+                        this.seekBar.max = this.audioPlayer.buffer.duration;
+                        this.timeDisplay.textContent = `${this.formatTime(0)} / ${this.formatTime(this.audioPlayer.buffer.duration)}`;
+                        
+                        if (this.beatmapContent) this.loadBeatmap(this.beatmapContent);
+                        
+                        this.setKeyLayout('standard');
+                        this.updateLoop();
+                        this.exportButton.disabled = false;
+                        console.log("Editor initialized successfully.");
+                    } catch (error) {
+                        console.error("[FATAL] Editor initialization failed:", error);
+                        App.showError(`Editor failed to start. [${error.message}]`);
+                    }
+                }
+
+                initDom() {
+                    this.container.innerHTML = `
+                        <style>
+                            #screen-editor .key-config-box { border: 2px solid var(--gray); transition: all 0.2s; }
+                            #screen-editor .key-config-box.selected { border-color: var(--yellow); box-shadow: 0 0 15px var(--yellow); transform: scale(1.1); }
+                        </style>
+                        <div class="w-full h-full flex">
+                            <div class="w-8 h-full bg-black bg-opacity-50 flex-shrink-0 border-r border-[var(--border-color)] relative">
+                                <div id="v-progress-bar" class="w-full h-full absolute top-0 left-0 bg-gradient-to-t from-cyan-500/50 to-magenta-500/50" style="clip-path: inset(100% 0 0 0);"></div>
+                            </div>
+                            <div class="flex-grow flex flex-col">
+                                <header class="flex-shrink-0 bg-black bg-opacity-30 p-2 border-b border-[var(--border-color)] flex items-center justify-between z-10">
+                                    <div class="flex items-center gap-4"><button id="editor-start-button" class="cyber-button btn-cyan py-2 px-6">START</button><span id="time-display" class="w-24 text-center text-sm font-sans">00:00 / 00:00</span></div>
+                                    <div class="flex items-center gap-4"><button id="editor-export-json-button" class="cyber-button btn-cyan py-2 px-4" disabled>EXPORT</button><button data-screen="title" class="screen-changer cyber-button btn-magenta py-2 px-4">EXIT</button></div>
+                                </header>
+                                <div class="flex-grow flex h-full overflow-hidden">
+                                    <canvas id="editor-canvas" class="flex-grow"></canvas>
+                                    <aside class="w-64 flex-shrink-0 bg-black bg-opacity-20 p-4 border-l border-[var(--border-color)] flex flex-col gap-4 font-sans overflow-y-auto">
+                                        <h2 class="text-lg font-bold font-['Orbitron'] border-b border-b-cyan-500/50 pb-2">KEY LAYOUT</h2>
+                                        <div><label class="text-sm">TEMPLATE</label><select id="key-layout-select" class="w-full bg-[var(--dark-bg)] border border-gray-500 p-2 rounded"><option value="standard">Standard (FGHJ)</option><option value="custom">Custom</option></select></div>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div id="key-box-0" data-lane="0" class="key-config-box rounded-md h-16 flex justify-center items-center text-2xl font-bold cursor-pointer">F</div><div id="key-box-1" data-lane="1" class="key-config-box rounded-md h-16 flex justify-center items-center text-2xl font-bold cursor-pointer">G</div>
+                                            <div id="key-box-2" data-lane="2" class="key-config-box rounded-md h-16 flex justify-center items-center text-2xl font-bold cursor-pointer">H</div><div id="key-box-3" data-lane="3" class="key-config-box rounded-md h-16 flex justify-center items-center text-2xl font-bold cursor-pointer">J</div>
+                                        </div>
+                                        <p class="text-xs text-center text-gray-400">Click a box, then press a key.</p>
+                                        <h2 class="text-lg font-bold font-['Orbitron'] border-b border-b-cyan-500/50 pb-2 mt-2">TOOLS</h2>
+                                        <div><label class="text-sm">QUANTIZE TO</label><select id="quantize-grid-select" class="w-full bg-[var(--dark-bg)] border border-gray-500 p-2 rounded"><option value="8">1/8</option><option value="12">1/12</option><option value="16" selected>1/16</option><option value="24">1/24</option><option value="32">1/32</option></select></div>
+                                        <button id="quantize-button" class="w-full cyber-button btn-yellow py-2 text-sm">APPLY QUANTIZE</button>
+                                        <h2 class="text-lg font-bold font-['Orbitron'] border-b border-b-cyan-500/50 pb-2 mt-2">METADATA</h2>
+                                        <div><label class="text-sm">BPM</label><input type="number" id="bpm-input" value="120" class="w-full bg-transparent border border-gray-500 p-2 rounded"></div>
+                                        <div><label class="text-sm">TITLE</label><input type="text" id="meta-title" placeholder="Song Title" class="w-full bg-transparent border border-gray-500 p-2 rounded"></div>
+                                        <div><label class="text-sm">AUTHOR</label><input type="text" id="meta-author" placeholder="Your Name" class="w-full bg-transparent border border-gray-500 p-2 rounded"></div>
+                                        <div class="mt-auto text-xs text-gray-500"><p>NOTES: <span id="note-count-display">0</span></p></div>
+                                    </aside>
+                                </div>
+                                <footer class="flex-shrink-0 bg-black bg-opacity-30 p-2 border-t border-[var(--border-color)] flex items-center justify-center gap-4 z-10"><input type="range" id="seek-bar" min="0" max="100" value="0" step="0.01" class="w-full"></footer>
+                            </div>
+                        </div>`;
+                    
+                    const query = (sel) => this.container.querySelector(sel);
+                    this.canvas = query('#editor-canvas'); this.ctx = this.canvas.getContext('2d');
+                    this.startButton = query('#editor-start-button'); this.seekBar = query('#seek-bar');
+                    this.timeDisplay = query('#time-display'); this.exportButton = query('#editor-export-json-button');
+                    this.noteCountDisplay = query('#note-count-display'); this.keyLayoutSelect = query('#key-layout-select');
+                    this.keyBoxes = Array.from(this.container.querySelectorAll('.key-config-box'));
+                    this.bpmInput = query('#bpm-input'); this.quantizeButton = query('#quantize-button');
+                    this.quantizeGridSelect = query('#quantize-grid-select'); this.vProgressBar = query('#v-progress-bar');
+                }
+
+                initState() {
+                    this.notes = [];
+                    this.keyMapping = {}; this.laneKeyMapping = {};
+                    this.selectedKeyBox = null; this.isPlaying = false;
+                    this.activeHolds = {}; this.laneFlashes = [];
+                    this.keyLayoutTemplates = { standard: {'f':0, 'g':1, 'h':2, 'j':3} };
+                }
+
+                attachEventListeners() {
+                    this.startButton.addEventListener('click', () => this.togglePlayback());
+                    this.seekBar.addEventListener('input', () => {
+                        if (!this.isPlaying) {
+                            this.audioPlayer.seek(this.seekBar.value);
+                        }
+                    });
+                    this.keyLayoutSelect.addEventListener('change', (e) => this.setKeyLayout(e.target.value));
+                    this.keyBoxes.forEach(box => {
+                        box.addEventListener('click', () => {
+                            if (this.selectedKeyBox) this.selectedKeyBox.classList.remove('selected');
+                            this.selectedKeyBox = box;
+                            this.selectedKeyBox.classList.add('selected');
+                        });
+                    });
+                    this.quantizeButton.addEventListener('click', () => this.quantizeNotes());
+                    this._boundKeyDown = this.handleKeyDown.bind(this);
+                    this._boundKeyUp = this.handleKeyUp.bind(this);
+                    document.addEventListener('keydown', this._boundKeyDown);
+                    document.addEventListener('keyup', this._boundKeyUp);
+                    this.exportButton.addEventListener('click', () => this.exportBeatmap());
+                }
+
+                loadBeatmap(jsonString) {
+                    const beatmap = JSON.parse(jsonString);
+                    this.bpmInput.value = beatmap.bpm || 120;
+                    this.container.querySelector('#meta-title').value = beatmap.title || '';
+                    this.container.querySelector('#meta-author').value = beatmap.author || '';
+                    this.notes = beatmap.notes.map(n => ({...n, time: n.time / 1000, duration: (n.duration || 0) / 1000})) || [];
+                    this.updateNoteCount();
+                }
+
+                updateLoop() {
+                    const currentTime = this.audioPlayer.now();
+                    const progress = this.isPlaying ? currentTime - this.playStartTime + this.playStartOffset : parseFloat(this.seekBar.value);
+                    
+                    if (this.isPlaying) {
+                        this.seekBar.value = progress;
+                    }
+                    if (this.isPlaying && progress >= this.audioPlayer.buffer.duration) {
+                        this.togglePlayback();
+                    }
+
+                    this.timeDisplay.textContent = `${this.formatTime(progress)} / ${this.formatTime(this.audioPlayer.buffer.duration)}`;
+                    this.vProgressBar.style.clipPath = `inset(${100 - (progress / this.audioPlayer.buffer.duration) * 100}% 0 0 0)`;
+
+                    this.drawOnCanvas();
+                    this.animationFrameId = requestAnimationFrame(this.updateLoop.bind(this));
+                }
+
+                drawOnCanvas() {
+                     if (!this.canvas || !this.canvas.clientWidth) return;
+                    this.canvas.width = this.canvas.clientWidth; this.canvas.height = this.canvas.clientHeight;
+                    const w = this.canvas.width, h = this.canvas.height;
+                    const viewStart = parseFloat(this.seekBar.value), viewEnd = viewStart + 2.5;
+                    this.ctx.fillStyle = '#010008'; this.ctx.fillRect(0,0,w,h);
+                    
+                    const vanishingPointY = -h * 0.5, floorLevel = h, laneWidthAtBottom = w * 0.4;
+                    const bpm = parseFloat(this.bpmInput.value) || 120;
+                    const barDuration = (60 / bpm) * 4;
+                    const firstBar = Math.floor(viewStart / barDuration) * barDuration;
+                    for (let t = firstBar; t < viewEnd; t += barDuration) {
+                        if (t >= 0) this.drawItem(t, 0, 4, {isBar: true});
+                    }
+
+                    this.notes.filter(n => n.time + (n.duration || 0) >= viewStart && n.time <= viewEnd)
+                       .forEach(note => this.drawItem(note.time, note.lane, 1, {isNote: true, duration: note.duration}));
+                    
+                    this.ctx.shadowBlur = 15; this.ctx.shadowColor = 'var(--cyan)';
+                    this.ctx.fillStyle = 'var(--cyan)'; this.ctx.fillRect(0, h-2, w, 2);
+                    this.ctx.shadowBlur = 0;
+                }
+
+                drawItem(time, lane, laneSpan, options = {}) {
+                    const h = this.canvas.height, w = this.canvas.width;
+                    const p = (t) => 1 - Math.pow(1 - t, 3);
+                    const drawAt = (t) => {
+                        const fallProgress = (t - parseFloat(this.seekBar.value)) / 2.5;
+                        if (fallProgress < 0 || fallProgress > 1) return null;
+                        const y = h * p(fallProgress);
+                        const scale = 0.1 + (1 - p(fallProgress)) * 0.9;
+                        const laneWidth = (w * 0.4) * scale;
+                        const x = (w/2) + ((lane + (laneSpan/2)) - 2) * (laneWidth / 4) - (laneWidth/2) * laneSpan;
+                        return {x, y, w: laneWidth * laneSpan, h: 15 * scale};
+                    };
+                    const startPos = drawAt(time);
+                    if (!startPos) return;
+
+                    if (options.isBar) {
+                        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+                        this.ctx.fillRect(startPos.x, startPos.y-1, startPos.w, 2);
+                    } else if(options.isNote) {
+                        const color = lane % 2 !== 0 ? 'var(--magenta)' : 'var(--cyan)';
+                        this.ctx.fillStyle = color; this.ctx.shadowColor = color;
+                        this.ctx.shadowBlur = 10;
+                        this.ctx.fillRect(startPos.x, startPos.y - startPos.h/2, startPos.w, startPos.h);
+                        this.ctx.shadowBlur = 0;
+                    }
+                }
+
+                togglePlayback() {
+                    this.isPlaying = !this.isPlaying;
+                    if (this.isPlaying) {
+                        this.playStartOffset = parseFloat(this.seekBar.value);
+                        this.playStartTime = this.audioPlayer.now();
+                        this.audioPlayer.start(this.playStartTime, this.playStartOffset);
+                        this.startButton.textContent = "STOP";
+                        this.startButton.classList.replace('btn-cyan', 'btn-magenta');
+                    } else {
+                        this.audioPlayer.stop();
+                        this.startButton.textContent = "START";
+                        this.startButton.classList.replace('btn-magenta', 'btn-cyan');
+                    }
+                }
+
+                handleKeyDown(e) {
+                    if (e.repeat || e.target.tagName === 'INPUT') return;
+                    const key = e.key.toLowerCase();
+                    e.preventDefault();
+                    if (this.selectedKeyBox) {
+                        const lane = parseInt(this.selectedKeyBox.dataset.lane);
+                        delete this.keyMapping[this.laneKeyMapping[lane]];
+                        this.keyMapping[key] = lane; this.laneKeyMapping[lane] = key;
+                        this.selectedKeyBox.textContent = key.toUpperCase();
+                        this.selectedKeyBox.classList.remove('selected');
+                        this.selectedKeyBox = null;
+                        this.keyLayoutSelect.value = 'custom';
+                    } else if (this.keyMapping[key] !== undefined && this.isPlaying && !this.activeHolds[key]) {
+                        const lane = this.keyMapping[key];
+                        const time = this.audioPlayer.now() - this.playStartTime + this.playStartOffset;
+                        this.activeHolds[key] = { time, lane, duration: 0 };
+                        this.notes.push(this.activeHolds[key]);
+                        this.updateNoteCount();
+                    }
+                }
+                
+                handleKeyUp(e) {
+                    const key = e.key.toLowerCase();
+                    if (this.keyMapping[key] !== undefined && this.isPlaying && this.activeHolds[key]) {
+                        const releaseTime = this.audioPlayer.now() - this.playStartTime + this.playStartOffset;
+                        this.activeHolds[key].duration = releaseTime - this.activeHolds[key].time;
+                        if(this.activeHolds[key].duration < 0.05) this.activeHolds[key].duration = 0;
+                        this.activeHolds[key] = null;
+                    }
+                }
+                
+                quantizeNotes() {
+                    if (this.notes.length === 0) return;
+                    const bpm = parseFloat(this.bpmInput.value) || 120;
+                    const quantizeGrid = parseInt(this.quantizeGridSelect.value);
+                    const quantizeInterval = (60 / bpm) / (quantizeGrid / 4);
+                    this.notes.forEach(note => {
+                        note.time = Math.round(note.time / quantizeInterval) * quantizeInterval;
+                        if(note.duration > 0) note.duration = Math.max(quantizeInterval, Math.round(note.duration / quantizeInterval) * quantizeInterval);
+                    });
+                    const uniqueNotes = [], noteSet = new Set();
+                    this.notes.sort((a,b)=>a.time-b.time).forEach(note => {
+                        const key = `${note.time.toFixed(4)}-${note.lane}`;
+                        if (!noteSet.has(key)) { uniqueNotes.push(note); noteSet.add(key); }
+                    });
+                    this.notes = uniqueNotes;
+                    this.updateNoteCount();
+                }
+
+                setKeyLayout(templateName) {
+                    this.keyMapping = {}; this.laneKeyMapping = {};
+                    const template = this.keyLayoutTemplates[templateName];
+                    if (!template) return;
+                    Object.entries(template).forEach(([key, lane]) => {
+                        if (lane < 4) { this.keyMapping[key] = lane; this.laneKeyMapping[lane] = key; }
+                    });
+                    this.updateKeyboxDisplays();
+                }
+                
+                updateKeyboxDisplays(){ this.keyBoxes.forEach((box, i) => { box.textContent = (this.laneKeyMapping[i] || '?').toUpperCase(); }); }
+                updateNoteCount() { this.noteCountDisplay.textContent = this.notes.length; }
+                formatTime(seconds) { const min = Math.floor(seconds / 60); const sec = Math.floor(seconds % 60); return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`; }
+
+                exportBeatmap() {
+                    const beatmap = {
+                        title: this.container.querySelector('#meta-title').value,
+                        author: this.container.querySelector('#meta-author').value,
+                        bpm: parseFloat(this.bpmInput.value),
+                        notes: this.notes.map(n => ({ ...n, time: Math.round(n.time * 1000), duration: Math.round((n.duration || 0) * 1000) })).sort((a,b)=> a.time - b.time)
+                    };
+                    const json = JSON.stringify(beatmap, null, 2);
+                    const blob = new Blob([json], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${(beatmap.title || 'beatmap').replace(/[^a-z0-9]/gi, '_')}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
+                
+                cleanup() {
+                    console.log("Editor cleanup called.");
+                    if (this.audioPlayer) { this.audioPlayer.stop(); this.audioPlayer.dispose(); }
+                    if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
+                    document.removeEventListener('keydown', this._boundKeyDown);
+                    document.removeEventListener('keyup', this._boundKeyUp);
+                    this.container.innerHTML = '';
+                }
+            }
+            App.CyberBlitzEditor = CyberBlitzEditor;
+
+            // Module 4: Player
+            class CyberBlitzPlayer {
+                constructor(container, audioUrl, beatmapContent, showScreenCallback) {
+                    this.container = container;
+                    this.audioUrl = audioUrl;
+                    this.beatmapContent = beatmapContent;
+                    this.showScreen = showScreenCallback;
+                    this.animationFrameId = null;
+                }
+                
+                async initialize() {
+                    try {
+                        this.initDom();
+                        this.initState();
+                        this.attachEventListeners();
+                        this.audioPlayer = await App.audioManager.loadPlayer(this.audioUrl);
+                        if (!this.audioPlayer) throw new Error("Audio player could not be loaded.");
+                        
+                        this.loadBeatmap(this.beatmapContent);
+                        this.startGame();
+                        console.log("Player initialized successfully.");
+                    } catch (error) {
+                        console.error("[FATAL] Player initialization failed:", error);
+                        App.showError(`Player failed to start. [${error.message}]`);
+                    }
+                }
+
+                initDom() {
+                    this.container.innerHTML = `
+                        <div class="relative w-[400px] h-full bg-black bg-opacity-50 border-x-2 border-[var(--border-color)] overflow-hidden flex flex-col">
+                            <div class="absolute top-4 left-4 text-left font-sans z-20">
+                                <p id="player-song-title" class="text-xl font-bold">Song Title</p>
+                                <p>SCORE: <span id="player-score" class="text-cyan-300">0</span></p>
+                            </div>
+                            <div class="absolute top-4 right-4 text-right z-20">
+                                <p class="text-5xl font-black" id="player-combo">0</p>
+                                <p class="text-xl font-bold" id="player-judgement"></p>
+                            </div>
+                            <canvas id="player-canvas" class="w-full flex-grow"></canvas>
+                        </div>`;
+                    this.canvas = this.container.querySelector('#player-canvas');
+                    this.ctx = this.canvas.getContext('2d');
+                    this.titleDisplay = this.container.querySelector('#player-song-title');
+                    this.scoreDisplay = this.container.querySelector('#player-score');
+                    this.comboDisplay = this.container.querySelector('#player-combo');
+                    this.judgementDisplay = this.container.querySelector('#player-judgement');
+                }
+
+                initState() {
+                    this.notes = [];
+                    this.beatmap = {};
+                    this.keyMapping = { 'f': 0, 'g': 1, 'h': 2, 'j': 3 }; // Default key layout
+                    this.upcomingNotes = [];
+                    this.score = 0;
+                    this.combo = 0;
+                    this.maxCombo = 0;
+                    this.judgements = { perfect: 0, great: 0, good: 0, miss: 0 };
+                    this.laneFlashes = [0, 0, 0, 0];
+                    this.timingWindows = { perfect: 40, great: 80, good: 120 }; // ms
+                }
+                
+                attachEventListeners() {
+                    this._boundKeyDown = this.handleKeyDown.bind(this);
+                    document.addEventListener('keydown', this._boundKeyDown);
+                }
+                
+                loadBeatmap(beatmapString) {
+                    this.beatmap = JSON.parse(beatmapString);
+                    this.notes = this.beatmap.notes.map(n => ({ ...n, time: n.time / 1000, judged: false, duration: (n.duration || 0) / 1000 })).sort((a, b) => a.time - b.time);
+                    this.upcomingNotes = [...this.notes];
+                    this.titleDisplay.textContent = this.beatmap.title || 'Untitled';
+                }
+
+                startGame() {
+                    if (!this.audioPlayer) return;
+                    this.startTime = Tone.now() + 1; // 1 second delay
+                    this.audioPlayer.start(this.startTime);
+                    this.animationFrameId = requestAnimationFrame(this.updateLoop.bind(this));
+                }
+
+                updateLoop() {
+                    if (!this.audioPlayer) return;
+                    const currentTime = Tone.now() - this.startTime;
+
+                    const missThreshold = this.timingWindows.good / 1000;
+                    for (let i = this.upcomingNotes.length - 1; i >= 0; i--) {
+                        const note = this.upcomingNotes[i];
+                        if (currentTime > note.time + missThreshold) {
+                            this.handleJudgement('miss');
+                            this.upcomingNotes.splice(i, 1);
+                        }
+                    }
+                    
+                    this.laneFlashes = this.laneFlashes.map(f => Math.max(0, f - 0.05));
+                    this.drawOnCanvas(currentTime);
+                    
+                    if (this.audioPlayer.state !== 'started' && this.upcomingNotes.length === 0) {
+                        this.endGame();
+                        return;
+                    }
+                    this.animationFrameId = requestAnimationFrame(this.updateLoop.bind(this));
+                }
+
+                drawOnCanvas(currentTime) {
+                    this.canvas.width = this.canvas.clientWidth;
+                    this.canvas.height = this.canvas.clientHeight;
+                    const w = this.canvas.width, h = this.canvas.height;
+                    const laneWidth = w / 4;
+                    const judgeLineY = h * 0.85;
+                    this.ctx.clearRect(0, 0, w, h);
+
+                    for (let i = 1; i < 4; i++) {
+                        this.ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(i * laneWidth, 0);
+                        this.ctx.lineTo(i * laneWidth, h);
+                        this.ctx.stroke();
+                    }
+                    
+                    for(let i=0; i < 4; i++) {
+                        if(this.laneFlashes[i] > 0) {
+                             this.ctx.fillStyle = `rgba(${i%2 ? '255,0,255' : '0,255,255'}, ${this.laneFlashes[i] * 0.5})`;
+                             this.ctx.fillRect(i * laneWidth, 0, laneWidth, h);
+                        }
+                    }
+                    
+                    const fallTime = 1.0; 
+                    this.upcomingNotes.forEach(note => {
+                        const timeDiff = note.time - currentTime;
+                        if (timeDiff < fallTime * 1.5 && timeDiff > -fallTime) {
+                            const y = judgeLineY - (timeDiff * judgeLineY / fallTime);
+                            const x = note.lane * laneWidth;
+                            const noteHeight = 15;
+                            const color = note.lane % 2 !== 0 ? 'var(--magenta)' : 'var(--cyan)';
+                            this.ctx.fillStyle = color;
+                            this.ctx.shadowColor = color;
+                            this.ctx.shadowBlur = 10;
+                            this.ctx.fillRect(x, y - noteHeight / 2, laneWidth, noteHeight);
+                            this.ctx.shadowBlur = 0;
+                        }
+                    });
+
+                    this.ctx.shadowBlur = 10;
+                    this.ctx.shadowColor = 'var(--yellow)';
+                    this.ctx.fillStyle = 'var(--yellow)';
+                    this.ctx.fillRect(0, judgeLineY - 2, w, 4);
+                    this.ctx.shadowBlur = 0;
+                }
+                
+                handleKeyDown(e) {
+                    if (e.repeat) return;
+                    const key = e.key.toLowerCase();
+                    if (this.keyMapping[key] === undefined) return;
+                    
+                    const lane = this.keyMapping[key];
+                    const currentTime = Tone.now() - this.startTime;
+                    this.laneFlashes[lane] = 1;
+
+                    for (let i = 0; i < this.upcomingNotes.length; i++) {
+                        const note = this.upcomingNotes[i];
+                        if (note.lane === lane) {
+                            const timeDiff = Math.abs(note.time - currentTime) * 1000; // in ms
+                            if (timeDiff <= this.timingWindows.good) {
+                                if (timeDiff <= this.timingWindows.perfect) this.handleJudgement('perfect');
+                                else if (timeDiff <= this.timingWindows.great) this.handleJudgement('great');
+                                else this.handleJudgement('good');
+                                this.upcomingNotes.splice(i, 1);
+                                return;
+                            }
+                        }
+                    }
+                }
+                
+                handleJudgement(judgement) {
+                    this.judgementDisplay.textContent = judgement.toUpperCase();
+                    this.judgementDisplay.style.color = {perfect: 'var(--yellow)', great: 'var(--cyan)', good: 'var(--magenta)', miss: 'var(--gray)'}[judgement];
+                    this.judgementDisplay.animate([ {opacity: 1, transform: 'scale(1.2)'}, {opacity: 0, transform: 'scale(1)'} ], { duration: 500, easing: 'ease-out' });
+
+                    this.judgements[judgement]++;
+                    if(judgement === 'miss' || judgement === 'good') {
+                        this.combo = 0;
+                    } else {
+                        this.combo++;
+                        this.maxCombo = Math.max(this.maxCombo, this.combo);
+                    }
+
+                    const scoreMap = { perfect: 100, great: 50, good: 10, miss: 0 };
+                    this.score += scoreMap[judgement];
+
+                    this.scoreDisplay.textContent = this.score;
+                    this.comboDisplay.textContent = this.combo > 1 ? this.combo : '';
+                }
+
+                endGame() {
+                    if (!this.animationFrameId) return; // Already ended
+                    this.cleanup();
+                    
+                    const resultDetail = {
+                        title: this.beatmap.title, score: this.score, maxCombo: this.maxCombo,
+                        judgements: this.judgements, totalNotes: this.notes.length
+                    };
+                    App.screenManager.showScreen('result', { detail: resultDetail });
+                }
+                
+                cleanup() {
+                    console.log("Player cleanup called.");
+                    if (this.audioPlayer) {
+                        this.audioPlayer.stop();
+                        this.audioPlayer.dispose();
+                    }
+                    if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
+                    document.removeEventListener('keydown', this._boundKeyDown);
+                    this.container.innerHTML = '';
+                    this.animationFrameId = null;
+                }
+            }
+            App.CyberBlitzPlayer = CyberBlitzPlayer;
+
+            // Module 2: AudioManager
+            App.audioManager = {
+                isReady: false,
+                async start() {
+                    if (this.isReady) return true;
+                    try {
+                        await Tone.start();
+                        this.isReady = true;
+                        console.log("AudioManager Started (AudioContext Ready).");
+                        return true;
+                    } catch (e) {
+                        console.error("Failed to start AudioManager:", e);
+                        App.showError("Audio could not be initialized. Please check your browser permissions.");
+                        return false;
+                    }
+                },
+                async loadPlayer(url) {
+                    if (!this.isReady) throw new Error("AudioManager not ready.");
+                    const player = new Tone.Player(url).toDestination();
+                    await Tone.loaded();
+                    return player;
+                },
+            };
+
+            // Module 1: ScreenManager
+            App.screenManager = {
+                init() {
+                    App.elements.screens = {
+                        title: document.getElementById('screen-title'),
+                        playLoader: document.getElementById('screen-play-loader'),
+                        play: document.getElementById('screen-play'),
+                        editorLoader: document.getElementById('screen-editor-loader'),
+                        editor: document.getElementById('screen-editor'),
+                        result: document.getElementById('screen-result'),
+                        error: document.getElementById('global-error-overlay'),
+                    };
+
+                    document.body.addEventListener('click', async (e) => {
+                        const target = e.target.closest('.screen-changer');
+                        if (target) {
+                            const audioReady = await App.audioManager.start();
+                            if (!audioReady) return;
+
+                            const screenId = target.dataset.screen;
+                            this.showScreen(screenId);
+                        }
+                    });
+
+                    console.log("ScreenManager Initialized.");
+                },
+
+                showScreen(screenId, options = {}) {
+                    console.log(`Switching to screen: ${screenId}`);
+                    if (App.currentInstance && typeof App.currentInstance.cleanup === 'function') {
+                        App.currentInstance.cleanup();
+                    }
+                    App.currentInstance = null;
+
+                    Object.values(App.elements.screens).forEach(s => s.classList.add('hidden-screen'));
+                    
+                    const targetScreen = App.elements.screens[screenId];
+                    if (targetScreen) {
+                        targetScreen.classList.remove('hidden-screen');
+                    } else {
+                        console.error(`Screen with id "${screenId}" not found.`);
+                        App.elements.screens.title.classList.remove('hidden-screen');
+                        return;
+                    }
+                    
+                    switch (screenId) {
+                        case 'play': App.initPlayer(); break;
+                        case 'editor': App.initEditor(); break;
+                        case 'result': App.showResult(options.detail); break;
+                    }
+                }
+            };
+
+            // Module 3: FileLoader
+            App.fileLoader = {
+                init() {
+                    this.initLoaderScreen('play');
+                    this.initLoaderScreen('editor');
+                    console.log("FileLoader Initialized.");
+                },
+                initLoaderScreen(mode) {
+                    const dropArea = document.getElementById(`${mode}-loader-drop-area`);
+                    const fileInput = document.getElementById(`${mode}-loader-file-input`);
+                    const audioStatus = document.getElementById(`${mode}-audio-status`);
+                    const beatmapStatus = document.getElementById(`${mode}-beatmap-status`);
+                    
+                    if (!dropArea) return;
+                    let audioFile, beatmapContent;
+
+                    const handleFiles = (files) => {
+                        let jsonReadPending = false;
+                        for (const file of files) {
+                            if (file.type.startsWith('audio/')) audioFile = file;
+                            else if (file.name.endsWith('.json')) {
+                                jsonReadPending = true;
+                                const reader = new FileReader();
+                                reader.onload = (e) => {
+                                    beatmapContent = e.target.result;
+                                    if (audioFile) tryToStart();
+                                };
+                                reader.readAsText(file);
+                            }
+                        }
+                        if (!jsonReadPending && audioFile) tryToStart();
+                    };
+
+                    const tryToStart = () => {
+                        if (!audioFile || (mode === 'play' && !beatmapContent)) return;
+                        sessionStorage.setItem(`cyberblitz-${mode}-audio-url`, URL.createObjectURL(audioFile));
+                        if (beatmapContent) sessionStorage.setItem(`cyberblitz-${mode}-beatmap-content`, beatmapContent);
+                        App.screenManager.showScreen(mode === 'play' ? 'play' : 'editor');
+                    };
+                    
+                    dropArea.addEventListener('dragenter', (e) => { e.preventDefault(); e.stopPropagation(); dropArea.classList.add('dragover'); });
+                    dropArea.addEventListener('dragleave', (e) => { e.preventDefault(); e.stopPropagation(); dropArea.classList.remove('dragover'); });
+                    dropArea.addEventListener('drop', (e) => { e.preventDefault(); e.stopPropagation(); dropArea.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
+                    fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+                }
+            };
+            
+            App.initPlayer = async () => {
+                const audioUrl = sessionStorage.getItem('cyberblitz-play-audio-url');
+                const beatmapContent = sessionStorage.getItem('cyberblitz-play-beatmap-content');
+                if (!audioUrl || !beatmapContent) {
+                    App.showError("Audio or Beatmap file not loaded.");
+                    return;
+                }
+                App.currentInstance = new App.CyberBlitzPlayer(App.elements.screens.play, audioUrl, beatmapContent, App.screenManager.showScreen.bind(App.screenManager));
+                await App.currentInstance.initialize();
+            };
+
+            App.initEditor = async () => {
+                const audioUrl = sessionStorage.getItem('cyberblitz-editor-audio-url');
+                const beatmapContent = sessionStorage.getItem('cyberblitz-editor-beatmap-content');
+                if (!audioUrl) {
+                    App.showError("Audio file not loaded for the editor.");
+                    return;
+                }
+                App.currentInstance = new App.CyberBlitzEditor(App.elements.screens.editor, audioUrl, beatmapContent);
+                await App.currentInstance.initialize();
+            };
+
+            App.showResult = (detail) => {
+                const container = App.elements.screens.result;
+                container.innerHTML = `
+                <div class="bg-dark-bg border-2 border-cyan-400 p-8 rounded-lg shadow-2xl shadow-cyan-500/20 w-full max-w-md text-center">
+                    <h2 class="text-3xl font-bold mb-2">${detail.title || 'Untitled'}</h2>
+                    <p class="text-7xl font-black text-yellow-300" style="-webkit-text-stroke: 2px #000;">${App.getRank(detail.score, detail.totalNotes)}</p>
+                    <div class="grid grid-cols-2 gap-x-8 gap-y-2 mt-4 mb-6 font-sans text-left">
+                        <p>SCORE: <span class="float-right font-bold text-cyan-300">${detail.score}</span></p>
+                        <p>MAX COMBO: <span class="float-right font-bold text-cyan-300">${detail.maxCombo}</span></p>
+                        <p>PERFECT: <span class="float-right font-bold text-white">${detail.judgements.perfect}</span></p>
+                        <p>GREAT: <span class="float-right font-bold text-white">${detail.judgements.great}</span></p>
+                        <p>GOOD: <span class="float-right font-bold text-white">${detail.judgements.good}</span></p>
+                        <p>MISS: <span class="float-right font-bold text-red-500">${detail.judgements.miss}</span></p>
+                    </div>
+                    <div class="flex gap-4 justify-center">
+                        <button id="result-retry-button-dynamic" class="cyber-button btn-cyan w-1/2">RETRY</button>
+                        <button data-screen="title" class="screen-changer cyber-button btn-magenta w-1/2">TITLE</button>
+                    </div>
+                </div>`;
+                container.classList.remove('hidden-screen');
+                document.getElementById('result-retry-button-dynamic').addEventListener('click', () => App.screenManager.showScreen('play'));
+            };
+
+            App.showError = (message) => {
+                const container = App.elements.screens.error;
+                container.innerHTML = `
+                <div class="bg-dark-bg border-2 border-red-500 p-8 rounded-lg shadow-2xl shadow-red-500/20 w-full max-w-md">
+                    <h2 class="text-2xl text-red-500 font-bold mb-4">APPLICATION ERROR</h2>
+                    <p class="font-sans text-lg mb-8">${message}</p>
+                    <button data-screen="title" class="screen-changer cyber-button btn-cyan">RETURN TO TITLE</button>
+                </div>`;
+                container.classList.remove('hidden-screen');
+            };
+
+            App.getRank = (score, totalNotes) => {
+                if (totalNotes === 0) return 'N/A';
+                const ratio = score / (totalNotes * 100);
+                if(ratio >= 0.98) return "S+";
+                if(ratio >= 0.95) return "S";
+                if(ratio >= 0.9) return "A";
+                if(ratio >= 0.8) return "B";
+                if(ratio >= 0.7) return "C";
+                return "D";
+            };
+
+            // Application Initializer
+            App.init = function() {
+                App.screenManager.init();
+                App.fileLoader.init();
+                console.log("Foundation Initialized.");
+            };
+
+            // Start the application
+            App.init();
+        });
+    </script>
+</body>
+</html>
