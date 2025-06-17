@@ -242,7 +242,6 @@
                 attachEventListeners() {
                     this.startButton.addEventListener('click', () => this.togglePlayback());
                     this.seekBar.addEventListener('input', () => {
-                        // FIX: Do not seek when paused, just let the visual update.
                         if (!this.isPlaying) {
                            this.drawOnCanvas();
                         }
@@ -268,7 +267,7 @@
                     this.bpmInput.value = beatmap.bpm || 120;
                     this.container.querySelector('#meta-title').value = beatmap.title || '';
                     this.container.querySelector('#meta-author').value = beatmap.author || '';
-                    this.notes = beatmap.notes.map(n => ({...n, time: n.time / 1000, duration: (n.duration || 0) / 1000})) || [];
+                    this.notes = beatmap.notes.map(n => ({...n, time: n.time / 1000, duration: (n.duration || 0) / 1000})).sort((a,b) => a.time - b.time);
                     this.updateNoteCount();
                 }
 
@@ -298,7 +297,7 @@
                 }
 
                 drawOnCanvas() {
-                     if (!this.canvas || !this.canvas.clientWidth) return;
+                    if (!this.canvas || !this.canvas.clientWidth) return;
                     this.canvas.width = this.canvas.clientWidth; this.canvas.height = this.canvas.clientHeight;
                     const w = this.canvas.width, h = this.canvas.height;
                     const viewStart = parseFloat(this.seekBar.value), viewEnd = viewStart + 2.5;
@@ -312,8 +311,20 @@
                         if (t >= 0) this.drawItem(t, 0, 4, {isBar: true});
                     }
 
-                    this.notes.filter(n => n.time + (n.duration || 0) >= viewStart && n.time <= viewEnd)
-                       .forEach(note => this.drawItem(note.time, note.lane, 1, {isNote: true, duration: note.duration}));
+                    // --- PERFORMANCE FIX START ---
+                    // Instead of filtering the entire notes array every frame,
+                    // find the first note that could be in view and loop from there.
+                    const startIndex = this.notes.findIndex(note => note.time + (note.duration || 0) >= viewStart);
+                    
+                    for (let i = Math.max(0, startIndex); i < this.notes.length; i++) {
+                        const note = this.notes[i];
+                        // If the note starts after the view ends, we can stop checking.
+                        if (note.time > viewEnd) {
+                            break;
+                        }
+                        this.drawItem(note.time, note.lane, 1, {isNote: true, duration: note.duration});
+                    }
+                    // --- PERFORMANCE FIX END ---
                     
                     this.ctx.shadowBlur = 15; this.ctx.shadowColor = 'var(--cyan)';
                     this.ctx.fillStyle = 'var(--cyan)'; this.ctx.fillRect(0, h-2, w, 2);
@@ -351,7 +362,7 @@
                     this.isPlaying = !this.isPlaying;
                     if (this.isPlaying) {
                         this.playStartOffset = parseFloat(this.seekBar.value);
-                        this.playStartTime = Tone.now(); // FIX: Use Tone.now()
+                        this.playStartTime = Tone.now();
                         this.audioPlayer.start(this.playStartTime, this.playStartOffset);
                         this.startButton.textContent = "STOP";
                         this.startButton.classList.replace('btn-cyan', 'btn-magenta');
@@ -376,9 +387,10 @@
                         this.keyLayoutSelect.value = 'custom';
                     } else if (this.keyMapping[key] !== undefined && this.isPlaying && !this.activeHolds[key]) {
                         const lane = this.keyMapping[key];
-                        const time = Tone.now() - this.playStartTime + this.playStartOffset; // FIX: Use Tone.now()
+                        const time = Tone.now() - this.playStartTime + this.playStartOffset;
                         this.activeHolds[key] = { time, lane, duration: 0 };
                         this.notes.push(this.activeHolds[key]);
+                        this.notes.sort((a,b) => a.time - b.time); // Keep notes sorted
                         this.updateNoteCount();
                     }
                 }
@@ -386,7 +398,7 @@
                 handleKeyUp(e) {
                     const key = e.key.toLowerCase();
                     if (this.keyMapping[key] !== undefined && this.isPlaying && this.activeHolds[key]) {
-                        const releaseTime = Tone.now() - this.playStartTime + this.playStartOffset; // FIX: Use Tone.now()
+                        const releaseTime = Tone.now() - this.playStartTime + this.playStartOffset;
                         this.activeHolds[key].duration = releaseTime - this.activeHolds[key].time;
                         if(this.activeHolds[key].duration < 0.05) this.activeHolds[key].duration = 0;
                         this.activeHolds[key] = null;
@@ -874,4 +886,4 @@
         });
     </script>
 </body>
-</ht
+</html>
