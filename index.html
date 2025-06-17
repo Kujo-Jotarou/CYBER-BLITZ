@@ -242,8 +242,9 @@
                 attachEventListeners() {
                     this.startButton.addEventListener('click', () => this.togglePlayback());
                     this.seekBar.addEventListener('input', () => {
+                        // FIX: Do not seek when paused, just let the visual update.
                         if (!this.isPlaying) {
-                            this.audioPlayer.seek(this.seekBar.value);
+                           this.drawOnCanvas();
                         }
                     });
                     this.keyLayoutSelect.addEventListener('change', (e) => this.setKeyLayout(e.target.value));
@@ -272,18 +273,25 @@
                 }
 
                 updateLoop() {
-                    const currentTime = this.audioPlayer.now();
-                    const progress = this.isPlaying ? currentTime - this.playStartTime + this.playStartOffset : parseFloat(this.seekBar.value);
+                    if(!this.audioPlayer) {
+                        this.animationFrameId = requestAnimationFrame(this.updateLoop.bind(this));
+                        return;
+                    };
+                    
+                    const progress = this.isPlaying ? (Tone.now() - this.playStartTime + this.playStartOffset) : parseFloat(this.seekBar.value);
                     
                     if (this.isPlaying) {
                         this.seekBar.value = progress;
                     }
+
                     if (this.isPlaying && progress >= this.audioPlayer.buffer.duration) {
                         this.togglePlayback();
                     }
 
                     this.timeDisplay.textContent = `${this.formatTime(progress)} / ${this.formatTime(this.audioPlayer.buffer.duration)}`;
-                    this.vProgressBar.style.clipPath = `inset(${100 - (progress / this.audioPlayer.buffer.duration) * 100}% 0 0 0)`;
+                    if (this.audioPlayer.buffer.duration > 0) {
+                      this.vProgressBar.style.clipPath = `inset(${100 - (progress / this.audioPlayer.buffer.duration) * 100}% 0 0 0)`;
+                    }
 
                     this.drawOnCanvas();
                     this.animationFrameId = requestAnimationFrame(this.updateLoop.bind(this));
@@ -343,7 +351,7 @@
                     this.isPlaying = !this.isPlaying;
                     if (this.isPlaying) {
                         this.playStartOffset = parseFloat(this.seekBar.value);
-                        this.playStartTime = this.audioPlayer.now();
+                        this.playStartTime = Tone.now(); // FIX: Use Tone.now()
                         this.audioPlayer.start(this.playStartTime, this.playStartOffset);
                         this.startButton.textContent = "STOP";
                         this.startButton.classList.replace('btn-cyan', 'btn-magenta');
@@ -360,7 +368,7 @@
                     e.preventDefault();
                     if (this.selectedKeyBox) {
                         const lane = parseInt(this.selectedKeyBox.dataset.lane);
-                        delete this.keyMapping[this.laneKeyMapping[lane]];
+                        if(this.laneKeyMapping[lane]) delete this.keyMapping[this.laneKeyMapping[lane]];
                         this.keyMapping[key] = lane; this.laneKeyMapping[lane] = key;
                         this.selectedKeyBox.textContent = key.toUpperCase();
                         this.selectedKeyBox.classList.remove('selected');
@@ -368,7 +376,7 @@
                         this.keyLayoutSelect.value = 'custom';
                     } else if (this.keyMapping[key] !== undefined && this.isPlaying && !this.activeHolds[key]) {
                         const lane = this.keyMapping[key];
-                        const time = this.audioPlayer.now() - this.playStartTime + this.playStartOffset;
+                        const time = Tone.now() - this.playStartTime + this.playStartOffset; // FIX: Use Tone.now()
                         this.activeHolds[key] = { time, lane, duration: 0 };
                         this.notes.push(this.activeHolds[key]);
                         this.updateNoteCount();
@@ -378,7 +386,7 @@
                 handleKeyUp(e) {
                     const key = e.key.toLowerCase();
                     if (this.keyMapping[key] !== undefined && this.isPlaying && this.activeHolds[key]) {
-                        const releaseTime = this.audioPlayer.now() - this.playStartTime + this.playStartOffset;
+                        const releaseTime = Tone.now() - this.playStartTime + this.playStartOffset; // FIX: Use Tone.now()
                         this.activeHolds[key].duration = releaseTime - this.activeHolds[key].time;
                         if(this.activeHolds[key].duration < 0.05) this.activeHolds[key].duration = 0;
                         this.activeHolds[key] = null;
@@ -866,4 +874,4 @@
         });
     </script>
 </body>
-</html>
+</ht
