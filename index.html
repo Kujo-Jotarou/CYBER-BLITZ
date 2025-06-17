@@ -296,6 +296,30 @@
                     this.animationFrameId = requestAnimationFrame(this.updateLoop.bind(this));
                 }
 
+                // --- PERFORMANCE FIX START ---
+                findFirstVisibleNoteIndex(viewStart) {
+                    let low = 0;
+                    let high = this.notes.length - 1;
+                    let ans = this.notes.length;
+
+                    while (low <= high) {
+                        const mid = Math.floor((low + high) / 2);
+                        const noteEndTime = this.notes[mid].time + (this.notes[mid].duration || 0);
+                        if (noteEndTime >= viewStart) {
+                            ans = mid;
+                            high = mid - 1;
+                        } else {
+                            low = mid + 1;
+                        }
+                    }
+                    
+                    while (ans > 0 && (this.notes[ans - 1].time + (this.notes[ans - 1].duration || 0)) >= viewStart) {
+                        ans--;
+                    }
+                    return ans;
+                }
+                // --- PERFORMANCE FIX END ---
+
                 drawOnCanvas() {
                     if (!this.canvas || !this.canvas.clientWidth) return;
                     this.canvas.width = this.canvas.clientWidth; this.canvas.height = this.canvas.clientHeight;
@@ -310,21 +334,16 @@
                     for (let t = firstBar; t < viewEnd; t += barDuration) {
                         if (t >= 0) this.drawItem(t, 0, 4, {isBar: true});
                     }
-
-                    // --- PERFORMANCE FIX START ---
-                    // Instead of filtering the entire notes array every frame,
-                    // find the first note that could be in view and loop from there.
-                    const startIndex = this.notes.findIndex(note => note.time + (note.duration || 0) >= viewStart);
                     
-                    for (let i = Math.max(0, startIndex); i < this.notes.length; i++) {
+                    const startIndex = this.findFirstVisibleNoteIndex(viewStart);
+                    
+                    for (let i = startIndex; i < this.notes.length; i++) {
                         const note = this.notes[i];
-                        // If the note starts after the view ends, we can stop checking.
                         if (note.time > viewEnd) {
                             break;
                         }
                         this.drawItem(note.time, note.lane, 1, {isNote: true, duration: note.duration});
                     }
-                    // --- PERFORMANCE FIX END ---
                     
                     this.ctx.shadowBlur = 15; this.ctx.shadowColor = 'var(--cyan)';
                     this.ctx.fillStyle = 'var(--cyan)'; this.ctx.fillRect(0, h-2, w, 2);
@@ -770,8 +789,6 @@
                 initLoaderScreen(mode) {
                     const dropArea = document.getElementById(`${mode}-loader-drop-area`);
                     const fileInput = document.getElementById(`${mode}-loader-file-input`);
-                    const audioStatus = document.getElementById(`${mode}-audio-status`);
-                    const beatmapStatus = document.getElementById(`${mode}-beatmap-status`);
                     
                     if (!dropArea) return;
                     let audioFile, beatmapContent;
