@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>CYBER BLITZ : HACKER BEATS (Modular)</title>
+    <title>CYBER BLITZ : HACKER BEATS</title>
     <!-- CDN Links -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
@@ -12,7 +12,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
     
-    <!-- Module 0: Foundation CSS -->
     <style>
         :root {
             --cyan: #00ffff;
@@ -150,7 +149,6 @@
                 currentInstance: null,
             };
             
-            // Module 5: Editor
             class CyberBlitzEditor {
                 constructor(container, audioUrl, beatmapContent) {
                     this.container = container;
@@ -277,14 +275,18 @@
                         return;
                     };
                     
-                    const progress = this.isPlaying ? (Tone.now() - this.playStartTime + this.playStartOffset) : parseFloat(this.seekBar.value);
-                    
+                    let progress;
                     if (this.isPlaying) {
+                        progress = Tone.now() - this.playStartTime + this.playStartOffset;
                         this.seekBar.value = progress;
+                    } else {
+                        progress = parseFloat(this.seekBar.value);
                     }
-
+                    
                     if (this.isPlaying && progress >= this.audioPlayer.buffer.duration) {
                         this.togglePlayback();
+                        progress = this.audioPlayer.buffer.duration;
+                        this.seekBar.value = progress;
                     }
 
                     this.timeDisplay.textContent = `${this.formatTime(progress)} / ${this.formatTime(this.audioPlayer.buffer.duration)}`;
@@ -295,8 +297,7 @@
                     this.drawOnCanvas();
                     this.animationFrameId = requestAnimationFrame(this.updateLoop.bind(this));
                 }
-
-                // --- PERFORMANCE FIX START ---
+                
                 findFirstVisibleNoteIndex(viewStart) {
                     let low = 0;
                     let high = this.notes.length - 1;
@@ -312,13 +313,8 @@
                             low = mid + 1;
                         }
                     }
-                    
-                    while (ans > 0 && (this.notes[ans - 1].time + (this.notes[ans - 1].duration || 0)) >= viewStart) {
-                        ans--;
-                    }
-                    return ans;
+                    return Math.max(0, ans - 1); 
                 }
-                // --- PERFORMANCE FIX END ---
 
                 drawOnCanvas() {
                     if (!this.canvas || !this.canvas.clientWidth) return;
@@ -327,7 +323,7 @@
                     const viewStart = parseFloat(this.seekBar.value), viewEnd = viewStart + 2.5;
                     this.ctx.fillStyle = '#010008'; this.ctx.fillRect(0,0,w,h);
                     
-                    const vanishingPointY = -h * 0.5, floorLevel = h, laneWidthAtBottom = w * 0.4;
+                    const vanishingPointY = -h * 0.5;
                     const bpm = parseFloat(this.bpmInput.value) || 120;
                     const barDuration = (60 / bpm) * 4;
                     const firstBar = Math.floor(viewStart / barDuration) * barDuration;
@@ -339,9 +335,7 @@
                     
                     for (let i = startIndex; i < this.notes.length; i++) {
                         const note = this.notes[i];
-                        if (note.time > viewEnd) {
-                            break;
-                        }
+                        if (note.time > viewEnd) break;
                         this.drawItem(note.time, note.lane, 1, {isNote: true, duration: note.duration});
                     }
                     
@@ -386,7 +380,7 @@
                         this.startButton.textContent = "STOP";
                         this.startButton.classList.replace('btn-cyan', 'btn-magenta');
                     } else {
-                        this.audioPlayer.stop();
+                        this.audioPlayer.stop(Tone.now());
                         this.startButton.textContent = "START";
                         this.startButton.classList.replace('btn-magenta', 'btn-cyan');
                     }
