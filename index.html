@@ -143,7 +143,6 @@
     <!-- Main Application Script -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Global Application Object
             const App = {
                 elements: {},
                 currentInstance: null,
@@ -166,12 +165,12 @@
                         if (!this.audioPlayer) throw new Error("Audio player could not be loaded.");
 
                         this.seekBar.max = this.audioPlayer.buffer.duration;
-                        this.timeDisplay.textContent = `${this.formatTime(0)} / ${this.formatTime(this.audioPlayer.buffer.duration)}`;
+                        this.updateUIForTime(0);
                         
                         if (this.beatmapContent) this.loadBeatmap(this.beatmapContent);
                         
                         this.setKeyLayout('standard');
-                        this.updateLoop();
+                        this.startUpdateLoop();
                         this.exportButton.disabled = false;
                         console.log("Editor initialized successfully.");
                     } catch (error) {
@@ -241,6 +240,7 @@
                     this.startButton.addEventListener('click', () => this.togglePlayback());
                     this.seekBar.addEventListener('input', () => {
                         if (!this.isPlaying) {
+                           this.updateUIForTime(parseFloat(this.seekBar.value));
                            this.drawOnCanvas();
                         }
                     });
@@ -267,35 +267,32 @@
                     this.container.querySelector('#meta-author').value = beatmap.author || '';
                     this.notes = beatmap.notes.map(n => ({...n, time: n.time / 1000, duration: (n.duration || 0) / 1000})).sort((a,b) => a.time - b.time);
                     this.updateNoteCount();
+                    this.drawOnCanvas();
                 }
 
-                updateLoop() {
-                    if(!this.audioPlayer) {
-                        this.animationFrameId = requestAnimationFrame(this.updateLoop.bind(this));
-                        return;
+                startUpdateLoop() {
+                    const loop = () => {
+                        if (this.isPlaying) {
+                            const progress = Tone.now() - this.playStartTime + this.playStartOffset;
+                            if (progress >= this.audioPlayer.buffer.duration) {
+                                this.togglePlayback();
+                                this.updateUIForTime(this.audioPlayer.buffer.duration);
+                            } else {
+                                this.updateUIForTime(progress);
+                            }
+                            this.drawOnCanvas();
+                        }
+                        this.animationFrameId = requestAnimationFrame(loop);
                     };
-                    
-                    let progress;
-                    if (this.isPlaying) {
-                        progress = Tone.now() - this.playStartTime + this.playStartOffset;
-                        this.seekBar.value = progress;
-                    } else {
-                        progress = parseFloat(this.seekBar.value);
-                    }
-                    
-                    if (this.isPlaying && progress >= this.audioPlayer.buffer.duration) {
-                        this.togglePlayback();
-                        progress = this.audioPlayer.buffer.duration;
-                        this.seekBar.value = progress;
-                    }
+                    this.animationFrameId = requestAnimationFrame(loop);
+                }
 
-                    this.timeDisplay.textContent = `${this.formatTime(progress)} / ${this.formatTime(this.audioPlayer.buffer.duration)}`;
+                updateUIForTime(time) {
+                    this.seekBar.value = time;
+                    this.timeDisplay.textContent = `${this.formatTime(time)} / ${this.formatTime(this.audioPlayer.buffer.duration)}`;
                     if (this.audioPlayer.buffer.duration > 0) {
-                      this.vProgressBar.style.clipPath = `inset(${100 - (progress / this.audioPlayer.buffer.duration) * 100}% 0 0 0)`;
+                      this.vProgressBar.style.clipPath = `inset(${100 - (time / this.audioPlayer.buffer.duration) * 100}% 0 0 0)`;
                     }
-
-                    this.drawOnCanvas();
-                    this.animationFrameId = requestAnimationFrame(this.updateLoop.bind(this));
                 }
                 
                 findFirstVisibleNoteIndex(viewStart) {
@@ -323,7 +320,6 @@
                     const viewStart = parseFloat(this.seekBar.value), viewEnd = viewStart + 2.5;
                     this.ctx.fillStyle = '#010008'; this.ctx.fillRect(0,0,w,h);
                     
-                    const vanishingPointY = -h * 0.5;
                     const bpm = parseFloat(this.bpmInput.value) || 120;
                     const barDuration = (60 / bpm) * 4;
                     const firstBar = Math.floor(viewStart / barDuration) * barDuration;
