@@ -273,8 +273,10 @@
 
                 startUpdateLoop() {
                     const loop = () => {
-                        this.animationFrameId = requestAnimationFrame(loop);
-                        if (!this.isPlaying) return;
+                        if (!this.isPlaying) {
+                            this.animationFrameId = null;
+                            return;
+                        }
                         
                         const progress = Tone.now() - this.playStartTime + this.playStartOffset;
                         if (progress >= this.audioPlayer.buffer.duration) {
@@ -284,6 +286,7 @@
                             this.updateUIForTime(progress);
                         }
                         this.drawOnCanvas();
+                        this.animationFrameId = requestAnimationFrame(loop);
                     };
                     this.animationFrameId = requestAnimationFrame(loop);
                 }
@@ -368,6 +371,7 @@
                         this.audioPlayer.start(this.playStartTime, this.playStartOffset);
                         this.startButton.textContent = "STOP";
                         this.startButton.classList.replace('btn-cyan', 'btn-magenta');
+                        if (!this.animationFrameId) this.startUpdateLoop(); // Restart loop if it was stopped
                     } else {
                         this.audioPlayer.stop(Tone.now());
                         this.startButton.textContent = "START";
