@@ -170,7 +170,8 @@
                         if (this.beatmapContent) this.loadBeatmap(this.beatmapContent);
                         
                         this.setKeyLayout('standard');
-                        this.startUpdateLoop();
+                        this.startUpdateLoop(); // Start the loop
+                        this.drawOnCanvas(); // Initial draw
                         this.exportButton.disabled = false;
                         console.log("Editor initialized successfully.");
                     } catch (error) {
