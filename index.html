@@ -170,8 +170,8 @@
                         if (this.beatmapContent) this.loadBeatmap(this.beatmapContent);
                         
                         this.setKeyLayout('standard');
-                        this.startUpdateLoop(); // Start the loop
-                        this.drawOnCanvas(); // Initial draw
+                        this.startUpdateLoop();
+                        this.drawOnCanvas(); 
                         this.exportButton.disabled = false;
                         console.log("Editor initialized successfully.");
                     } catch (error) {
@@ -273,17 +273,17 @@
 
                 startUpdateLoop() {
                     const loop = () => {
-                        if (this.isPlaying) {
-                            const progress = Tone.now() - this.playStartTime + this.playStartOffset;
-                            if (progress >= this.audioPlayer.buffer.duration) {
-                                this.togglePlayback();
-                                this.updateUIForTime(this.audioPlayer.buffer.duration);
-                            } else {
-                                this.updateUIForTime(progress);
-                            }
-                            this.drawOnCanvas();
-                        }
                         this.animationFrameId = requestAnimationFrame(loop);
+                        if (!this.isPlaying) return;
+                        
+                        const progress = Tone.now() - this.playStartTime + this.playStartOffset;
+                        if (progress >= this.audioPlayer.buffer.duration) {
+                            this.togglePlayback();
+                            this.updateUIForTime(this.audioPlayer.buffer.duration);
+                        } else {
+                            this.updateUIForTime(progress);
+                        }
+                        this.drawOnCanvas();
                     };
                     this.animationFrameId = requestAnimationFrame(loop);
                 }
@@ -297,10 +297,7 @@
                 }
                 
                 findFirstVisibleNoteIndex(viewStart) {
-                    let low = 0;
-                    let high = this.notes.length - 1;
-                    let ans = this.notes.length;
-
+                    let low = 0, high = this.notes.length - 1, ans = this.notes.length;
                     while (low <= high) {
                         const mid = Math.floor((low + high) / 2);
                         const noteEndTime = this.notes[mid].time + (this.notes[mid].duration || 0);
@@ -343,27 +340,22 @@
 
                 drawItem(time, lane, laneSpan, options = {}) {
                     const h = this.canvas.height, w = this.canvas.width;
-                    const p = (t) => 1 - Math.pow(1 - t, 3);
-                    const drawAt = (t) => {
-                        const fallProgress = (t - parseFloat(this.seekBar.value)) / 2.5;
-                        if (fallProgress < 0 || fallProgress > 1) return null;
-                        const y = h * p(fallProgress);
-                        const scale = 0.1 + (1 - p(fallProgress)) * 0.9;
-                        const laneWidth = (w * 0.4) * scale;
-                        const x = (w/2) + ((lane + (laneSpan/2)) - 2) * (laneWidth / 4) - (laneWidth/2) * laneSpan;
-                        return {x, y, w: laneWidth * laneSpan, h: 15 * scale};
-                    };
-                    const startPos = drawAt(time);
-                    if (!startPos) return;
+                    const fallProgress = (time - parseFloat(this.seekBar.value)) / 2.5;
+                    if (fallProgress < 0 || fallProgress > 1) return;
 
+                    const y = h * (1 - Math.pow(1 - fallProgress, 3));
+                    const scale = 0.1 + (1 - fallProgress) * 0.9;
+                    const laneWidth = (w * 0.4) * scale;
+                    const x = (w/2) + ((lane + (laneSpan/2)) - 2) * (laneWidth / 4) - (laneWidth/2) * laneSpan;
+                    
                     if (options.isBar) {
                         this.ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-                        this.ctx.fillRect(startPos.x, startPos.y-1, startPos.w, 2);
+                        this.ctx.fillRect(x, y-1, laneWidth * laneSpan, 2);
                     } else if(options.isNote) {
                         const color = lane % 2 !== 0 ? 'var(--magenta)' : 'var(--cyan)';
                         this.ctx.fillStyle = color; this.ctx.shadowColor = color;
                         this.ctx.shadowBlur = 10;
-                        this.ctx.fillRect(startPos.x, startPos.y - startPos.h/2, startPos.w, startPos.h);
+                        this.ctx.fillRect(x, y - (15*scale)/2, laneWidth, 15 * scale);
                         this.ctx.shadowBlur = 0;
                     }
                 }
@@ -400,7 +392,7 @@
                         const time = Tone.now() - this.playStartTime + this.playStartOffset;
                         this.activeHolds[key] = { time, lane, duration: 0 };
                         this.notes.push(this.activeHolds[key]);
-                        this.notes.sort((a,b) => a.time - b.time); // Keep notes sorted
+                        this.notes.sort((a,b) => a.time - b.time);
                         this.updateNoteCount();
                     }
                 }
@@ -431,6 +423,7 @@
                     });
                     this.notes = uniqueNotes;
                     this.updateNoteCount();
+                    this.drawOnCanvas();
                 }
 
                 setKeyLayout(templateName) {
